@@ -16,9 +16,13 @@ ShiftListener = {
 HNewsKeys = {
     getMainPageObj: function() {
         if (!window.content.HNewsKeys) {
-            window.content.HNewsKeys = new HNewsMainPage();
+            HNewsKeys.createMainPageObj();
         } 
         return window.content.HNewsKeys;
+    },
+
+    createMainPageObj: function() {
+        window.content.HNewsKeys = new HNewsMainPage();
     },
 
     getCommentsObj: function() {
@@ -29,15 +33,19 @@ HNewsKeys = {
     },
 
     onKeypress: function(e) {
-        var obj;
-        var location = getBrowser().currentURI.spec.split('?')[0];
-        if (location.match('http://news.ycombinator.com/(x|ask|jobs|newest|)$')) {
-            obj = HNewsKeys.getMainPageObj();
-            obj.onKeypress(e);
-        } 
-        if (location.match('http://news.ycombinator.com/(item|threads|newcomments)')) {
-            obj = HNewsKeys.getCommentsObj();
-            obj.onKeypress(e);
+        try {
+            var obj;
+            var location = getBrowser().currentURI.spec.split('?')[0];
+            if (location.match('http://news.ycombinator.com/(x|ask|jobs|newest|)$')) {
+                obj = HNewsKeys.getMainPageObj();
+                obj.onKeypress(e);
+            } 
+            if (location.match('http://news.ycombinator.com/(item|threads|newcomments)')) {
+                obj = HNewsKeys.getCommentsObj();
+                obj.onKeypress(e);
+            }
+        } catch (e) {
+            alert(e.message);
         }
     }
 
@@ -129,7 +137,6 @@ HNewsComments = Ext.extend(PageTools, {
                 });
             }
         }
-        alert('Finished also!');
     },
 
     onKeypress: function(e) {
@@ -160,7 +167,7 @@ HNewsMainPage = Ext.extend(PageTools, {
                 titles.push(anchors[i]);
             }
             if (anchors[i].parentNode.className === 'subtext' && 
-                anchors[i].getAttribute('href').slice(0, 4) === 'item') {
+                anchors[i].getAttribute('href').match('item')) {
                 this.derelativize(anchors[i]);
                 comments.push(anchors[i]);
             }
@@ -171,7 +178,6 @@ HNewsMainPage = Ext.extend(PageTools, {
                 comment : comments[i]
             });
         }
-        alert('Finished');
     },
 
     open: function(newPage) {
@@ -219,5 +225,6 @@ HNewsMainPage = Ext.extend(PageTools, {
 });
 
 window.addEventListener("keypress", HNewsKeys.onKeypress, false); 
+window.addEventListener("onlocationchange", HNewsKeys.createMainPageObj, false); 
 window.addEventListener("keydown", ShiftListener.onKeydown, false); 
 window.addEventListener("keyup", ShiftListener.onKeyup, false); 
