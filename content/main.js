@@ -20,6 +20,7 @@ ShiftListener = {
 };
 
 HNewsKeys = {
+    currentTitle: -1,
     getMainPageObj: function() {
         if (!window.content.HNewsKeys) {
             HNewsKeys.createMainPageObj();
@@ -28,7 +29,7 @@ HNewsKeys = {
     },
 
     createMainPageObj: function() {
-        window.content.HNewsKeys = new HNewsMainPage();
+        window.content.HNewsKeys = new HNewsMainPage(HNewsKeys.currentTitle);
     },
 
     getCommentsObj: function() {
@@ -56,13 +57,18 @@ HNewsKeys = {
     onBrowserLoad: function(event) {
         if (event.originalTarget.nodeName == '#document' &&
             event.originalTarget.defaultView.location.href == gBrowser.currentURI.spec &&
-            HNewsKeys.isTitlePage() || HNewsKeys.isCommentsPage()) {
+            (HNewsKeys.isTitlePage() || HNewsKeys.isCommentsPage())) {
             var style = window.content.document.createElement("link");
             style.type = "text/css";
             style.rel = "stylesheet";
             style.href = "chrome://hnewskeys/content/hnewskeys.css";
             content.document.getElementsByTagName("head")[0].appendChild(style);
             LOG('Attached CSS');
+            if (HNewsKeys.isTitlePage()) {
+                HNewsKeys.getMainPageObj();
+            } else {
+                HNewsKeys.getCommentsObj();
+            }
         }
     },
 
@@ -86,10 +92,15 @@ HNewsKeys = {
 PageTools = Ext.extend(Object, {
     constructor: function(current) {
         this.items = [];
-        this.current = (typeof current !== 'undefined') ? current : -1;
+        LOG('current is ' + current);
+        var existingCurrent = typeof current !== 'undefined';
+        this.current = existingCurrent ? current : -1;
         this.init();
         for (i = 0; i < this.items.length; i++) {
             this.unembolden(i);
+        }
+        if (this.current >= 0) {
+            this.embolden(this.current);
         }
     },
 
@@ -106,6 +117,7 @@ PageTools = Ext.extend(Object, {
             this.unembolden(oldPosition);
         }
         this.fixPosition();
+        return newPosition;
     },
 
     unembolden: function(index) {
@@ -210,6 +222,12 @@ HNewsMainPage = Ext.extend(PageTools, {
                 comment : comments[i]
             });
         }
+    },
+
+    move: function(num) {
+        var newPosition = HNewsMainPage.superclass.move.call(this, num);
+        HNewsKeys.currentTitle = newPosition;
+        return newPosition;
     },
 
     open: function(newPage) {
