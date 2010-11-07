@@ -15,10 +15,11 @@ var HNewsKeys = {
 
     onKeypress: function(e) {
         var obj;
-        if (getBrowser().currentURI.spec === 'http://news.ycombinator.com/') {
+        if (getBrowser().currentURI.spec.match('http://news.ycombinator.com/x?')) {
             obj = HNewsKeys.getMainPageObj();
             obj.onKeypress(e);
-        } else {
+        } 
+        if (getBrowser().currentURI.spec.match('http://news.ycombinator.com/item')) {
             obj = HNewsKeys.getCommentsObj();
             obj.onKeypress(e);
         }
@@ -47,7 +48,7 @@ PageTools = Ext.extend(Object, {
         if (!(oldPosition < 0 || oldPosition >= this.items.length)) {
             this.unembolden(oldPosition);
         }
-        fixPosition();
+        this.fixPosition();
     },
 
     unembolden: function(index) {
@@ -85,6 +86,17 @@ PageTools = Ext.extend(Object, {
 
     getCurrentTextItem: function() {
         return this.getCurrentItem().text;
+    },
+
+    derelativize: function(anchor) {
+        var href = anchor.getAttribute('href');
+        var prefix = 'http://news.ycombinator.com';
+        if (href.slice(0, 4) !== 'http') {
+            if (href.slice(0, 1) !== '/') {
+                prefix += '/';
+            } 
+            anchor.setAttribute('href', prefix + href);
+        }
     }
 
 });
@@ -127,10 +139,12 @@ HNewsMainPage = Ext.extend(PageTools, {
         var anchors = window.content.document.getElementsByTagName('a');
         for (var i = 0; i < anchors.length; i++) {
             if (anchors[i].parentNode.className === 'title') {
+                this.derelativize(anchors[i]);
                 titles.push(anchors[i]);
             }
             if (anchors[i].parentNode.className === 'subtext' && 
                 anchors[i].getAttribute('href').slice(0, 4) === 'item') {
+                this.derelativize(anchors[i]);
                 comments.push(anchors[i]);
             }
         }
@@ -149,7 +163,7 @@ HNewsMainPage = Ext.extend(PageTools, {
     },
 
     openComments: function() {
-        var url = 'http://news.ycombinator.com/' + this.getCurrentItem().comment.getAttribute('href');
+        var url = this.getCurrentItem().comment.getAttribute('href');
         window.content.location = url;
     },
  
