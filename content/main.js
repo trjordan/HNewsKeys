@@ -83,7 +83,7 @@ HNewsKeys = {
         } catch (e) {
             var msg = 'Error: ' + e.message + "\n\n" +
                     e.stack;
-            alert(msg);
+            LOG(msg);
         }
     }
 
