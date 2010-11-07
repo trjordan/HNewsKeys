@@ -6,13 +6,6 @@ var HelloWorld = {
 
         var style = 'font-size:70';
 
-        // var doc = window.content.document;
-        // var css = doc.createElement('link');
-        // css.setAttribute('rel',"stylesheet");
-        // css.setAttribute('href', "resource://helloworld/content/overlay.css");
-        // css.setAttribute('type', "text/css2");
-        // doc.getElementsByTagName('head')[0].appendChild(css);
-
         var titles = [];
         var anchors = window.content.document.getElementsByTagName('a');
         for (var i = 0; i < anchors.length; i++) {
@@ -21,8 +14,7 @@ var HelloWorld = {
             }
         }    
         for (var i = 0; i < titles.length; i++) {
-            //titles[i].className = 'mooo';
-            titles[i].setAttribute('style',style);
+            titles[i].setAttribute('style', style);
         }
         alert('Finished!');
     },
