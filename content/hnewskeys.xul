@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <overlay id="hnewskeys"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="ext-base.js"/>
   <script src="main.js"/>
-  <script src="jquery-1.4.3.min.js"/>
 </overlay>

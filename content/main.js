@@ -13,58 +13,58 @@ var HNewsKeys = {
         return window.content.HNewsKeysComments;
     },
 
-    onLoad: function(e) {
-        if (getBrowser().currentURI.spec === 'http://news.ycombinator.com/') {
-            // No!
-        }
-    },
-
     onKeypress: function(e) {
+        var obj;
         if (getBrowser().currentURI.spec === 'http://news.ycombinator.com/') {
-            var obj = HNewsKeys.getMainPageObj();
+            obj = HNewsKeys.getMainPageObj();
             obj.onKeypress(e);
         } else {
-            var obj = HNewsKeys.getCommentsObj();
+            obj = HNewsKeys.getCommentsObj();
             obj.onKeypress(e);
         }
     }
 };
 
-var HNewsComments = function() {
+PageTools = Ext.extend(Object, {
+    constructor: function() {
+        this.items = [];
+        this.current = -1;
+        this.init();
+        for (i = 0; i < this.items.length; i++) {
+            this.unembolden(i);
+        }
+    },
 
-    var comments = [];
-    var current  = 0;
-
-    function move(num) {
-        var oldPosition = current;
+    move: function(num) {
+        var oldPosition = this.current;
         var newPosition = oldPosition + num;
-        if (newPosition < 0 || newPosition >= comments.length) {
+        if (newPosition < 0 || newPosition >= this.items.length) {
             return;
         }
-        embolden(newPosition);
-        current = newPosition;
+        this.embolden(newPosition);
+        this.current = newPosition;
 
-        if (!(oldPosition < 0 || oldPosition >= comments.length)) {
-            unembolden(oldPosition);
+        if (!(oldPosition < 0 || oldPosition >= this.items.length)) {
+            this.unembolden(oldPosition);
         }
         fixPosition();
-    }
+    },
 
-    function unembolden(index) {
-        comments[index].setAttribute('style', '');
-    }
+    unembolden: function(index) {
+        this.items[index].text.setAttribute('style', '');
+    },
 
-    function embolden(index) {
-        comments[index].setAttribute('style', 'font-size:24');
-    }
+    embolden: function(index) {
+        this.items[index].text.setAttribute('style', 'font-size:24');
+    },
 
-    function fixPosition() {
+    fixPosition: function() {
         var body = window.content.document.getElementsByTagName('body')[0];
         var currentOffset = body.scrollTop;
         var viewHeight = window.content.innerHeight;
-        var commentHeight = comments[current].offsetHeight;
+        var commentHeight = this.getCurrentTextItem().offsetHeight;
         var offset = 0;
-        var currentNode = comments[current];
+        var currentNode = this.getCurrentTextItem();
         while (currentNode !== body) {
             offset += currentNode.offsetTop;
             currentNode = currentNode.offsetParent;
@@ -77,120 +77,101 @@ var HNewsComments = function() {
         } else if (offset < body.scrollTop) {
             body.scrollTop = offset - 35;
         }
+    },
+
+    getCurrentItem: function() {
+        return this.items[this.current];
+    },
+
+    getCurrentTextItem: function() {
+        return this.getCurrentItem().text;
     }
 
-    var spans = window.content.document.getElementsByTagName('span');
-    for (var i = 0; i < spans.length; i++) {
-        if (spans[i].className === 'comment') {
-            comments.push(spans[i]);
-        }
-    }
-    alert('Finished also!');
+});
 
-    return {
-        onKeypress: function(e) {
-            var letter = (e.keyCode == 13) ? 'ENTER' : String.fromCharCode(e.charCode);
-            switch(letter) {
-            case 'j':
-                move(1);
-                break;
-            case 'k':
-                move(-1);
-                break;
-            case 'ENTER':
-                open();
-                break;
-            case 'o':
-                openComments();
-                break;
-            default:
-                return;
+HNewsComments = Ext.extend(PageTools, {
+
+    init: function() {
+        var spans = window.content.document.getElementsByTagName('span');
+        for (var i = 0; i < spans.length; i++) {
+            if (spans[i].className === 'comment') {
+                this.items.push({
+                    text : spans[i]
+                });
             }
         }
-    }
-};
+        alert('Finished also!');
+    },
 
-var HNewsMainPage = function() {
-
-    var current  = -1;
-    var titles   = [];
-    var comments = [];
-
-    function open() {
-        var url = titles[current].getAttribute('href');
-        window.content.location = url;
-    }
-
-    function openComments() {
-        var url = 'http://news.ycombinator.com/' + comments[current].getAttribute('href');
-        window.content.location = url;
-    }
-
-    function move(num) {
-        var oldPosition = current;
-        var newPosition = oldPosition + num;
-        if (newPosition < 0 || newPosition >= titles.length) {
+    onKeypress: function(e) {
+        var letter = (e.keyCode == 13) ? 'ENTER' : String.fromCharCode(e.charCode);
+        switch(letter) {
+        case 'j':
+            this.move(1);
+            break;
+        case 'k':
+            this.move(-1);
+            break;
+        default:
             return;
         }
-        embolden(newPosition);
-        current = newPosition;
+    }
+});
 
-        if (oldPosition < 0 || oldPosition >= titles.length) {
-            return;
-        }
-        unembolden(oldPosition);
-    }
-    
-    function unembolden(index) {
-        titles[index].setAttribute('style', '');
-    }
+HNewsMainPage = Ext.extend(PageTools, {
 
-    function embolden(index) {
-        titles[index].setAttribute('style', 'font-size:24');
-    }
+    init: function() {
+        var comments = [];
+        var titles   = [];
 
-    var anchors = window.content.document.getElementsByTagName('a');
-    for (var i = 0; i < anchors.length; i++) {
-        if (anchors[i].parentNode.className === 'title') {
-            titles.push(anchors[i]);
+        var anchors = window.content.document.getElementsByTagName('a');
+        for (var i = 0; i < anchors.length; i++) {
+            if (anchors[i].parentNode.className === 'title') {
+                titles.push(anchors[i]);
+            }
+            if (anchors[i].parentNode.className === 'subtext' && 
+                anchors[i].getAttribute('href').slice(0, 4) === 'item') {
+                comments.push(anchors[i]);
+            }
         }
-        if (anchors[i].parentNode.className === 'subtext' && 
-            anchors[i].getAttribute('href').slice(0, 4) === 'item') {
-            comments.push(anchors[i]);
+        for (i = 0; i < titles.length; i++) {
+            this.items.push({
+                text    : titles[i],
+                comment : comments[i]
+            });
         }
-    }
-    for (i = 0; i < titles.length; i++) {
-        unembolden(i);
-    }
-    if (current >= 0) {
-        embolden(current);
-    }
-    alert('Finished');
+        alert('Finished');
+    },
+
+    open: function() {
+        var url = this.getCurrentItem().text.getAttribute('href');
+        window.content.location = url;
+    },
+
+    openComments: function() {
+        var url = 'http://news.ycombinator.com/' + this.getCurrentItem().comment.getAttribute('href');
+        window.content.location = url;
+    },
  
-    return {
-        onKeypress: function(e) {
-            var letter = (e.keyCode == 13) ? 'ENTER' : String.fromCharCode(e.charCode);
-            switch(letter) {
-            case 'j':
-                move(1);
-                break;
-            case 'k':
-                move(-1);
-                break;
-            case 'ENTER':
-                open();
-                break;
-            case 'o':
-                openComments();
-                break;
-            default:
-                return;
-            }
-        },
+    onKeypress: function(e) {
+        var letter = (e.keyCode == 13) ? 'ENTER' : String.fromCharCode(e.charCode);
+        switch(letter) {
+        case 'j':
+            this.move(1);
+            break;
+        case 'k':
+            this.move(-1);
+            break;
+        case 'ENTER':
+            this.open();
+            break;
+        case 'o':
+            this.openComments();
+            break;
+        default:
+            return;
+        }
+    }
+});
 
-    };
-};
-
-window.addEventListener("DOMContentLoaded", HNewsKeys.onLoad, false); 
 window.addEventListener("keypress", HNewsKeys.onKeypress, false); 
-
