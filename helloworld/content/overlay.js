@@ -6,6 +6,13 @@ var HNewsKeys = {
         return window.content.HNewsKeys;
     },
 
+    getCommentsObj: function() {
+        if (!window.content.HNewsKeysComments) {
+            window.content.HNewsKeysComments = new HNewsComments();
+        } 
+        return window.content.HNewsKeysComments;
+    },
+
     onLoad: function(e) {
         if (getBrowser().currentURI.spec === 'http://news.ycombinator.com/') {
             // No!
@@ -16,13 +23,90 @@ var HNewsKeys = {
         if (getBrowser().currentURI.spec === 'http://news.ycombinator.com/') {
             var obj = HNewsKeys.getMainPageObj();
             obj.onKeypress(e);
+        } else {
+            var obj = HNewsKeys.getCommentsObj();
+            obj.onKeypress(e);
         }
     }
 };
 
-var HNewsComments = {
-    onLoad: function() {
+var HNewsComments = function() {
 
+    var comments = [];
+    var current  = 0;
+
+    function move(num) {
+        var oldPosition = current;
+        var newPosition = oldPosition + num;
+        if (newPosition < 0 || newPosition >= comments.length) {
+            return;
+        }
+        embolden(newPosition);
+        current = newPosition;
+
+        if (!(oldPosition < 0 || oldPosition >= comments.length)) {
+            unembolden(oldPosition);
+        }
+        fixPosition();
+    }
+
+    function unembolden(index) {
+        comments[index].setAttribute('style', '');
+    }
+
+    function embolden(index) {
+        comments[index].setAttribute('style', 'font-size:24');
+    }
+
+    function fixPosition() {
+        var body = window.content.document.getElementsByTagName('body')[0];
+        var currentOffset = body.scrollTop;
+        var viewHeight = window.content.innerHeight;
+        var commentHeight = comments[current].offsetHeight;
+        var offset = 0;
+        var currentNode = comments[current];
+        while (currentNode !== body) {
+            offset += currentNode.offsetTop;
+            currentNode = currentNode.offsetParent;
+        }
+
+        // TODO: Align to elements, not pixels.
+        // TODO: Remove TODO
+        if (offset + commentHeight > body.scrollTop + viewHeight) {
+            body.scrollTop = offset - viewHeight + commentHeight + 35;
+        } else if (offset < body.scrollTop) {
+            body.scrollTop = offset - 35;
+        }
+    }
+
+    var spans = window.content.document.getElementsByTagName('span');
+    for (var i = 0; i < spans.length; i++) {
+        if (spans[i].className === 'comment') {
+            comments.push(spans[i]);
+        }
+    }
+    alert('Finished also!');
+
+    return {
+        onKeypress: function(e) {
+            var letter = (e.keyCode == 13) ? 'ENTER' : String.fromCharCode(e.charCode);
+            switch(letter) {
+            case 'j':
+                move(1);
+                break;
+            case 'k':
+                move(-1);
+                break;
+            case 'ENTER':
+                open();
+                break;
+            case 'o':
+                openComments();
+                break;
+            default:
+                return;
+            }
+        }
     }
 };
 
