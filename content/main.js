@@ -1,4 +1,19 @@
-var HNewsKeys = {
+ShiftListener = {
+    pressed: false,
+    onKeydown: function(e) {
+        if (e.keyCode == 16) {
+            ShiftListener.pressed = true;
+        }
+    },
+
+    onKeyup: function(e) {
+        if (e.keyCode == 16) {
+            ShiftListener.pressed = false;
+        }
+    }
+};
+
+HNewsKeys = {
     getMainPageObj: function() {
         if (!window.content.HNewsKeys) {
             window.content.HNewsKeys = new HNewsMainPage();
@@ -15,15 +30,17 @@ var HNewsKeys = {
 
     onKeypress: function(e) {
         var obj;
-        if (getBrowser().currentURI.spec.match('http://news.ycombinator.com/x?')) {
+        var location = getBrowser().currentURI.spec.split('?')[0];
+        if (location.match('http://news.ycombinator.com/(x|ask|jobs|newest|)$')) {
             obj = HNewsKeys.getMainPageObj();
             obj.onKeypress(e);
         } 
-        if (getBrowser().currentURI.spec.match('http://news.ycombinator.com/item')) {
+        if (location.match('http://news.ycombinator.com/(item|threads|newcomments)')) {
             obj = HNewsKeys.getCommentsObj();
             obj.onKeypress(e);
         }
     }
+
 };
 
 PageTools = Ext.extend(Object, {
@@ -157,14 +174,22 @@ HNewsMainPage = Ext.extend(PageTools, {
         alert('Finished');
     },
 
-    open: function() {
+    open: function(newPage) {
         var url = this.getCurrentItem().text.getAttribute('href');
-        window.content.location = url;
+        if (newPage) {
+            window.content.open(url);
+        } else {
+            window.content.location = url;
+        }
     },
 
-    openComments: function() {
+    openComments: function(newPage) {
         var url = this.getCurrentItem().comment.getAttribute('href');
-        window.content.location = url;
+        if (newPage) {
+            window.content.open(url);
+        } else {
+            window.content.location = url;
+        }
     },
  
     onKeypress: function(e) {
@@ -177,15 +202,22 @@ HNewsMainPage = Ext.extend(PageTools, {
             this.move(-1);
             break;
         case 'ENTER':
-            this.open();
+            this.open(ShiftListener.pressed);
             break;
         case 'o':
-            this.openComments();
+        case 'O':
+            this.openComments(ShiftListener.pressed);
             break;
         default:
             return;
         }
+    },
+
+    onKeydown: function(e) {
     }
+
 });
 
 window.addEventListener("keypress", HNewsKeys.onKeypress, false); 
+window.addEventListener("keydown", ShiftListener.onKeydown, false); 
+window.addEventListener("keyup", ShiftListener.onKeyup, false); 
