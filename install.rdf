@@ -4,7 +4,7 @@
      xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <Description about="urn:mozilla:install-manifest">
-    <em:id>mrh@grah.com</em:id>
+    <em:id>hnewskeys@gmail.com</em:id>
     <em:version>1.0</em:version>
     <em:type>2</em:type>
     
@@ -19,9 +19,9 @@
     </em:targetApplication>
     
     <!-- Front End MetaData -->
-    <em:name>sample</em:name>
-    <em:description>A test extension</em:description>
-    <em:creator>Your Name Here</em:creator>
-    <em:homepageURL>http://www.example.com/</em:homepageURL>
+    <em:name>Hacker News Keys</em:name>
+    <em:description>Keyboard shortcuts for Hacker News (news.ycombinator.com)</em:description>
+    <em:creator>TR Jordan</em:creator>
+    <em:homepageURL>http://mumbledrantings.blogspot.com/</em:homepageURL>
   </Description>      
 </RDF>
