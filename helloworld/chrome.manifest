@@ -1,0 +1,4 @@
+content	helloworld	content/
+overlay	chrome://browser/content/browser.xul    chrome://helloworld/content/overlay.xul
+
+

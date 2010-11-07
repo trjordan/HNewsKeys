@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
+<!DOCTYPE window SYSTEM "chrome://helloworld/locale/hello.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+        title="Fuck you, imma title!">
+
+<hbox align="center">
+  <description flex="1">Yeah, description!</description>
+  <button label="yeahlabel" oncommand="close();"/>
+</hbox>
+
+</window>
