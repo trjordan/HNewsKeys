@@ -1,3 +1,9 @@
+function LOG(msg) {
+    var consoleService = Components.classes["@mozilla.org/consoleservice;1"]  
+            .getService(Components.interfaces.nsIConsoleService);  
+    consoleService.logStringMessage(msg);  
+}  
+
 ShiftListener = {
     pressed: false,
     onKeydown: function(e) {
@@ -31,30 +37,56 @@ HNewsKeys = {
         } 
         return window.content.HNewsKeysComments;
     },
+    
+    isTitlePage: function() {
+        var location = getBrowser().currentURI.spec.split('?')[0];
+        return location.match('http://news.ycombinator.com/(x|ask|jobs|newest|)$');
+    },
+
+    isCommentsPage: function() {
+        var location = getBrowser().currentURI.spec.split('?')[0];
+        return location.match('http://news.ycombinator.com/(item|threads|newcomments)');
+    },
+
+    onWindowLoad: function() {
+        LOG('Window loaded');
+        gBrowser.addEventListener('load', HNewsKeys.onBrowserLoad, true);
+    },
+
+    onBrowserLoad: function(event) {
+        if (event.originalTarget.nodeName == '#document' &&
+            event.originalTarget.defaultView.location.href == gBrowser.currentURI.spec &&
+            HNewsKeys.isTitlePage() || HNewsKeys.isCommentsPage()) {
+            var style = window.content.document.createElement("link");
+            style.type = "text/css";
+            style.rel = "stylesheet";
+            style.href = "chrome://hnewskeys/content/hnewskeys.css";
+            content.document.getElementsByTagName("head")[0].appendChild(style);
+            LOG('Attached CSS');
+        }
+    },
 
     onKeypress: function(e) {
         try {
-            var obj;
-            var location = getBrowser().currentURI.spec.split('?')[0];
-            if (location.match('http://news.ycombinator.com/(x|ask|jobs|newest|)$')) {
-                obj = HNewsKeys.getMainPageObj();
-                obj.onKeypress(e);
+            if (HNewsKeys.isTitlePage()) {
+                HNewsKeys.getMainPageObj().onKeypress(e);
             } 
-            if (location.match('http://news.ycombinator.com/(item|threads|newcomments)')) {
-                obj = HNewsKeys.getCommentsObj();
-                obj.onKeypress(e);
+            if (HNewsKeys.isCommentsPage()) {
+                HNewsKeys.getCommentsObj().onKeypress(e);
             }
         } catch (e) {
-            alert(e.message);
+            var msg = 'Error: ' + e.message + "\n\n" +
+                    e.stack;
+            alert(msg);
         }
     }
 
 };
 
 PageTools = Ext.extend(Object, {
-    constructor: function() {
+    constructor: function(current) {
         this.items = [];
-        this.current = -1;
+        this.current = (typeof current !== 'undefined') ? current : -1;
         this.init();
         for (i = 0; i < this.items.length; i++) {
             this.unembolden(i);
@@ -77,11 +109,11 @@ PageTools = Ext.extend(Object, {
     },
 
     unembolden: function(index) {
-        this.items[index].text.setAttribute('style', '');
+        this.items[index].text.className = '';
     },
 
     embolden: function(index) {
-        this.items[index].text.setAttribute('style', 'font-size:24');
+        this.items[index].text.className = 'current-title';
     },
 
     fixPosition: function() {
@@ -225,6 +257,6 @@ HNewsMainPage = Ext.extend(PageTools, {
 });
 
 window.addEventListener("keypress", HNewsKeys.onKeypress, false); 
-window.addEventListener("onlocationchange", HNewsKeys.createMainPageObj, false); 
+window.addEventListener("load", HNewsKeys.onWindowLoad, false); 
 window.addEventListener("keydown", ShiftListener.onKeydown, false); 
 window.addEventListener("keyup", ShiftListener.onKeyup, false); 
