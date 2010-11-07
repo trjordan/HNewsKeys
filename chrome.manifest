@@ -1,0 +1,4 @@
+content	hnewskeys	content/
+overlay	chrome://browser/content/browser.xul    chrome://hnewskeys/content/overlay.xul
+
+
