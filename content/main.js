@@ -121,11 +121,11 @@ PageTools = Ext.extend(Object, {
     },
 
     unembolden: function(index) {
-        this.items[index].text.className = '';
+        Ext.get(this.items[index].text).removeClass('current-title');
     },
 
     embolden: function(index) {
-        this.items[index].text.className = 'current-title';
+        Ext.get(this.items[index].text).addClass('current-title');
     },
 
     fixPosition: function() {
@@ -166,6 +166,7 @@ PageTools = Ext.extend(Object, {
             } 
             anchor.setAttribute('href', prefix + href);
         }
+        return anchor;
     }
 
 });
@@ -173,13 +174,48 @@ PageTools = Ext.extend(Object, {
 HNewsComments = Ext.extend(PageTools, {
 
     init: function() {
-        var spans = window.content.document.getElementsByTagName('span');
-        for (var i = 0; i < spans.length; i++) {
-            if (spans[i].className === 'comment') {
+        var anchors = window.content.document.getElementsByTagName('a');
+        for (var i = 0; i < anchors.length; i++) {
+            if (Ext.get(anchors[i].parentNode).hasClass('title')) {
                 this.items.push({
-                    text : spans[i]
+                    text : anchors[i]
                 });
             }
+        }
+
+        var spans = window.content.document.getElementsByTagName('span');
+        for (var i = 0; i < spans.length; i++) {
+            if (Ext.get(spans[i]).hasClass('comment')) {
+                this.items.push({
+                    text  : spans[i],
+                    reply : this.getReplyAnchor(spans[i])
+                });
+            }
+        }
+    },
+
+    getReplyAnchor: function(commentSpan) {
+        var replyAnchor = null;
+        var replyP = commentSpan.nextSibling;
+        if (replyP) {
+            replyAnchors = replyP.getElementsByTagName('a');
+            if (replyAnchors.length) {
+                replyAnchor = replyAnchors[0];
+                this.derelativize(replyAnchor);
+            }
+        }
+        return replyAnchor;
+    },
+
+    reply: function(newPage) {
+        if (!this.getCurrentItem().reply) {
+            return;
+        }
+        var url = this.getCurrentItem().reply.getAttribute('href');
+        if (newPage) {
+            window.content.open(url);
+        } else {
+            window.content.location = url;
         }
     },
 
@@ -191,6 +227,10 @@ HNewsComments = Ext.extend(PageTools, {
             break;
         case 'k':
             this.move(-1);
+            break;
+        case 'R':
+        case 'r':
+            this.reply(ShiftListener.pressed);
             break;
         default:
             return;
@@ -206,11 +246,11 @@ HNewsMainPage = Ext.extend(PageTools, {
 
         var anchors = window.content.document.getElementsByTagName('a');
         for (var i = 0; i < anchors.length; i++) {
-            if (anchors[i].parentNode.className === 'title') {
+            if (Ext.get(anchors[i].parentNode).hasClass('title')) {
                 this.derelativize(anchors[i]);
                 titles.push(anchors[i]);
             }
-            if (anchors[i].parentNode.className === 'subtext' && 
+            if (Ext.get(anchors[i].parentNode).hasClass('subtext') && 
                 anchors[i].getAttribute('href').match('item')) {
                 this.derelativize(anchors[i]);
                 comments.push(anchors[i]);
