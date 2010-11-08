@@ -22,6 +22,7 @@
     <em:name>Hacker News Keys</em:name>
     <em:description>Keyboard shortcuts for Hacker News (news.ycombinator.com)</em:description>
     <em:creator>TR Jordan</em:creator>
+    <em:developer>Greg Echelberger</em:developer>
     <em:homepageURL>http://mumbledrantings.blogspot.com/</em:homepageURL>
   </Description>      
 </RDF>
